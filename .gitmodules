@@ -1,0 +1,3 @@
+[submodule "libs/threadpool"]
+	path = libs/threadpool
+	url = https://github.com/onmcrawford/threadpool.git
