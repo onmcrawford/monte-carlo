@@ -11,6 +11,7 @@ struct argument {
 	unsigned long *false_count;
 	unsigned long sample_size;
 	unsigned int n;
+	unsigned int seed;
 };
 
 /* generate a random floating point number from min to max */
@@ -22,12 +23,9 @@ int inside_Q(double x, double y)
 	return ((a <= x && x <= b) && (c <= y && y <= d));
 }
 
-double randfrom(double min, double max)
+static inline double randfrom(unsigned int *seed, double min, double max)
 {
-	double range = (max - min);
-	double div = RAND_MAX / range;
-
-	return min + (rand() / div);
+	return min + rand_r(seed) / ((double)RAND_MAX / (max - min));
 }
 
 static inline double distance(double x, double y)
@@ -58,6 +56,7 @@ void tess_test(void *arg)
 	struct argument *val = arg;
 	unsigned long sample_size = val->sample_size;
 	unsigned int n = val->n;
+	unsigned int seed = val->seed;
 
 	// allocate all of our sites, we assume it works bcs lazy
 	double *siteOpts = (double *)malloc(2 * n * sizeof(double));
@@ -68,8 +67,8 @@ void tess_test(void *arg)
 	for (unsigned long i = 0; i < sample_size; i++) {
 		// first construct all of our sites
 		for (unsigned int j = 0; j < n; j++) {
-			siteOpts[2 * j] = randfrom(-2, 2);
-			siteOpts[2 * j + 1] = randfrom(-2, 2);
+			siteOpts[2 * j] = randfrom(&seed, -2, 2);
+			siteOpts[2 * j + 1] = randfrom(&seed, -2, 2);
 		}
 		// now all of our sites are constructed, see if closest is correct
 		unsigned int closestSite = closest(siteOpts, n);
@@ -86,8 +85,8 @@ void tess_test(void *arg)
 int main(int argc, char **argv)
 {
 	long sample_size = atol(argv[1]);
-	const int num_threads = 8;
-	unsigned int n = 20;
+	const int num_threads = 4;
+	unsigned int n = 2;
 
 	int size_per_thread = sample_size / num_threads;
 
